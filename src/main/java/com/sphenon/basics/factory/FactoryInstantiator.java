@@ -1,7 +1,7 @@
 package com.sphenon.basics.factory;
 
 /****************************************************************************
-  Copyright 2001-2018 Sphenon GmbH
+  Copyright 2001-2024 Sphenon GmbH
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not
   use this file except in compliance with the License. You may obtain a copy
@@ -67,7 +67,7 @@ abstract public class FactoryInstantiator<FactoryType> {
 
     protected Map<Vector<String>,Constructor<FactoryType>> implementation_constructor_by_fspsp;
     
-    protected Map<Vector<String>,Constructor<FactoryType>> implementation_constructor_by_fp;
+    protected Map<String,Constructor<FactoryType>> implementation_constructor_by_fp;
 
     public FactoryType newInstance (CallContext context) {
         FactoryContext fc = FactoryContext.get((Context) context);
@@ -100,26 +100,22 @@ abstract public class FactoryInstantiator<FactoryType> {
                         return ic.newInstance(context);
                     }
                 }
-                Vector<String> fps = fc.getFactoryPrefix(context);
-                if (fps != null) {
+                String fp = fc.getFactoryPrefix(context);
+                if (fp != null) {
                     if (this.implementation_constructor_by_fp == null) {
-                        this.implementation_constructor_by_fp = new HashMap<Vector<String>,Constructor<FactoryType>>();
+                        this.implementation_constructor_by_fp = new HashMap<String,Constructor<FactoryType>>();
                     }
                     Constructor<FactoryType> ic = null;
-                    if (this.implementation_constructor_by_fp.containsKey(fps)) {
-                        ic = this.implementation_constructor_by_fp.get(fps);
+                    if (this.implementation_constructor_by_fp.containsKey(fp)) {
+                        ic = this.implementation_constructor_by_fp.get(fp);
                     } else {
                         String fcn = factory_class.getName();
-                        String p = "";
+                        String p = fp + "_";
                         int pos = fcn.lastIndexOf('.');
                         String fcnp = (pos == -1 ? "" : fcn.substring(0, pos+1));
                         String fcnn = (pos == -1 ? fcn : fcn.substring(pos+1));
-                        for (String fp : fps) {
-                            p += fp+"_";
-                            ic = this.getConstructor(context, fcnp+p+fcnn, false);
-                            if (ic != null) { break; }
-                        }
-                        this.implementation_constructor_by_fp.put(fps, ic);
+                        ic = this.getConstructor(context, fcnp + p + fcnn, false);
+                        this.implementation_constructor_by_fp.put(fp, ic);
                     }
                     if (ic != null) {
                         return ic.newInstance(context);

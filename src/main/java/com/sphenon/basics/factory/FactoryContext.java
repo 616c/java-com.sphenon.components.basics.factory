@@ -1,7 +1,7 @@
 package com.sphenon.basics.factory;
 
 /****************************************************************************
-  Copyright 2001-2018 Sphenon GmbH
+  Copyright 2001-2024 Sphenon GmbH
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not
   use this file except in compliance with the License. You may obtain a copy
@@ -18,6 +18,7 @@ import com.sphenon.basics.context.*;
 import com.sphenon.basics.message.*;
 import com.sphenon.basics.exception.*;
 import com.sphenon.basics.customary.*;
+import com.sphenon.basics.function.*;
 
 import java.util.Vector;
 
@@ -66,27 +67,29 @@ public class FactoryContext extends SpecificContext {
                );
     }
     
-    protected Vector<String> factory_prefix;
+    protected String factory_prefix;
+    protected Getter<String> factory_prefix_source;
     
-    public void addFactoryPrefix(CallContext context, String prefix){
-        if (this.factory_prefix == null) {
-            this.factory_prefix = this.getFactoryPrefix(context);
-            if (this.factory_prefix != null) {
-                this.factory_prefix = (Vector<String>) (this.factory_prefix.clone());
-            } else {
-                this.factory_prefix = new Vector<String>();
-            }
-        }
-        this.factory_prefix.add(prefix);
+    public void setFactoryPrefixSource(CallContext context, Getter<String> factory_prefix_source){
+        this.factory_prefix_source = factory_prefix_source;
+    }
+
+    public void setFactoryPrefix(CallContext context, String prefix){
+        this.factory_prefix = prefix;
     }
     
-    public Vector<String> getFactoryPrefix(CallContext context){
+    public String getFactoryPrefix(CallContext context){
         FactoryContext factory_context;
-        return (this.factory_prefix != null ?
-                     this.factory_prefix
-                  : (factory_context = (FactoryContext) this.getCallContext(FactoryContext.class)) != null ?
-                       factory_context.getFactoryPrefix(context)
-                     : null
+        String fp = null;
+        return ( (    this.factory_prefix_source != null
+                   && ((fp = this.factory_prefix_source.get(context)) != null)
+                 ) ?
+                    fp
+                : this.factory_prefix != null ?
+                    this.factory_prefix
+                : (factory_context = (FactoryContext) this.getCallContext(FactoryContext.class)) != null ?
+                    factory_context.getFactoryPrefix(context)
+                : null
                );
     }
 }
